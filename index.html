@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" oncontextmenu="return false;">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -18,6 +18,8 @@ body {
     overflow: hidden;
     touch-action: none;
     user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
 }
 
 #bgCanvas {
@@ -56,13 +58,8 @@ canvas#gameCanvas {
     transition: box-shadow 0.3s;
 }
 
-canvas#gameCanvas.graphics-2d {
-    box-shadow: 0 0 20px rgba(78, 201, 176, 0.3);
-}
-
-canvas#gameCanvas.graphics-3d {
-    box-shadow: 0 0 80px rgba(78, 201, 176, 0.6), 0 0 120px rgba(255, 64, 96, 0.2);
-}
+canvas#gameCanvas.graphics-2d { box-shadow: 0 0 20px rgba(78, 201, 176, 0.3); }
+canvas#gameCanvas.graphics-3d { box-shadow: 0 0 80px rgba(78, 201, 176, 0.6), 0 0 120px rgba(255, 64, 96, 0.2); }
 
 .buttons {
     margin-top: 12px;
@@ -164,10 +161,7 @@ button.secondary {
     font-weight: bold;
 }
 
-.setting-btn-group {
-    display: flex;
-    gap: 8px;
-}
+.setting-btn-group { display: flex; gap: 8px; }
 
 .setting-btn {
     padding: 8px 14px;
@@ -182,14 +176,8 @@ button.secondary {
     transition: all 0.2s;
 }
 
-.setting-btn.active {
-    background: #4ec9b0;
-    color: #0a0e1a;
-}
-
-.setting-btn:hover {
-    transform: scale(1.05);
-}
+.setting-btn.active { background: #4ec9b0; color: #0a0e1a; }
+.setting-btn:hover { transform: scale(1.05); }
 
 .achievement {
     display: flex;
@@ -204,17 +192,8 @@ button.secondary {
     transition: all 0.3s;
 }
 
-.achievement.locked {
-    opacity: 0.4;
-    border-left-color: #3a4a6a;
-}
-
-.achievement.unlocked {
-    opacity: 1;
-    border-left-color: #ffd040;
-    background: rgba(255, 208, 64, 0.1);
-    box-shadow: 0 0 15px rgba(255, 208, 64, 0.3);
-}
+.achievement.locked { opacity: 0.4; border-left-color: #3a4a6a; }
+.achievement.unlocked { opacity: 1; border-left-color: #ffd040; background: rgba(255, 208, 64, 0.1); box-shadow: 0 0 15px rgba(255, 208, 64, 0.3); }
 
 .achievement-icon { font-size: 24px; }
 .achievement-info { flex: 1; text-align: left; }
@@ -280,10 +259,7 @@ button.secondary {
     display: none;
 }
 
-#comboBox.show {
-    display: block !important;
-    animation: popIn 0.3s ease;
-}
+#comboBox.show { display: block !important; animation: popIn 0.3s ease; }
 
 #notification {
     position: fixed;
@@ -341,10 +317,7 @@ button.secondary {
     font-weight: bold;
 }
 
-.difficulty-btn:hover {
-    background: rgba(78, 201, 176, 0.3);
-    transform: translateX(5px);
-}
+.difficulty-btn:hover { background: rgba(78, 201, 176, 0.3); transform: translateX(5px); }
 
 .difficulty-btn.easy { border-left: 4px solid #4ec9b0; }
 .difficulty-btn.medium { border-left: 4px solid #ffd040; }
@@ -377,15 +350,13 @@ button.secondary {
         <h2>📖 Как играть</h2>
         <p><span class="highlight">Цель:</span> сделать все кубики <span class="highlight">СИНИМИ</span>.</p>
         <p><span class="highlight">Клик по кубику:</span> переключает его <span class="highlight">И 4 соседа</span>.</p>
-        <p><span class="highlight">Комбо:</span> если кликаешь <span class="highlight">правильные кубики подряд</span> за 1.5 сек — комбо растёт!</p>
-        <p><span class="highlight">Совет:</span> думай наперёд, но не тормози — комбо даёт бонус.</p>
+        <p><span class="highlight">Комбо:</span> кликай <span class="highlight">правильные кубики подряд</span> за 1.5 сек — комбо растёт!</p>
         <button class="menu-btn" onclick="showMenu()">← Назад</button>
     </div>
 
     <div id="botSetupScreen">
         <h2>🤖 Против бота</h2>
         <p><span class="highlight">Правила:</span> ты ходишь → бот ходит → ты ходишь → ...</p>
-        <p><span class="highlight">Цель:</span> первым сделать все кубики <span class="highlight">СИНИМИ</span>.</p>
         <p>Выбери сложность:</p>
         <button class="difficulty-btn tutorial" onclick="startBotGame('tutorial')">📖 Обучение — подсказки</button>
         <button class="difficulty-btn easy" onclick="startBotGame('easy')">🟢 Лёгкий — бот тупит</button>
@@ -490,18 +461,26 @@ button.secondary {
 <div id="botHint"></div>
 
 <script>
+// === ЗАЩИТА ОТ ПРОСМОТРА КОДА ===
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+    // F12
+    if (e.key === 'F12') { e.preventDefault(); return false; }
+    // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C
+    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) {
+        e.preventDefault(); return false;
+    }
+    // Ctrl+U (просмотр кода)
+    if (e.ctrlKey && e.key === 'u') { e.preventDefault(); return false; }
+    // Ctrl+S (сохранение)
+    if (e.ctrlKey && e.key === 's') { e.preventDefault(); return false; }
+});
+
 const TILE_SIZE = 72;
 const OFFSET_X = 45;
 const OFFSET_Y = 45;
 
-let settings = {
-    music: true,
-    sound: true,
-    graphics: '2_5d',
-    bgAnim: true,
-    particles: true
-};
-
+let settings = { music: true, sound: true, graphics: '2_5d', bgAnim: true, particles: true };
 let SIZE = 5;
 let grid = [];
 let moves = 0;
@@ -531,7 +510,6 @@ const ctx = canvas.getContext('2d');
 const bgCanvas = document.getElementById('bgCanvas');
 const bgCtx = bgCanvas.getContext('2d');
 
-// === ЗВУКИ ===
 let audioCtx = null;
 function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -566,7 +544,6 @@ function soundWin() {
 function soundFail() { playSound(180, 0.4, 'sawtooth', 0.5); }
 function soundButton() { playSound(440, 0.06, 'sine', 0.3); }
 
-// === МУЗЫКА ===
 let musicInterval = null;
 function startMusic() {
     if (musicInterval || !settings.music) return;
@@ -593,13 +570,9 @@ function startMusic() {
 }
 
 function stopMusic() {
-    if (musicInterval) {
-        clearInterval(musicInterval);
-        musicInterval = null;
-    }
+    if (musicInterval) { clearInterval(musicInterval); musicInterval = null; }
 }
 
-// === ФОН ===
 let bgParticles = [];
 let bgTime = 0;
 
@@ -620,11 +593,7 @@ function initBgCanvas() {
 }
 
 function drawBg() {
-    if (!settings.bgAnim) {
-        bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
-        return;
-    }
-    
+    if (!settings.bgAnim) { bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height); return; }
     bgTime += 0.01;
     const grad = bgCtx.createRadialGradient(
         bgCanvas.width / 2 + Math.sin(bgTime) * 100,
@@ -636,17 +605,14 @@ function drawBg() {
     grad.addColorStop(1, '#050810');
     bgCtx.fillStyle = grad;
     bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
-    
     bgParticles.forEach((p, i) => {
         p.x += p.vx; p.y += p.vy;
         if (p.x < 0 || p.x > bgCanvas.width) p.vx *= -1;
         if (p.y < 0 || p.y > bgCanvas.height) p.vy *= -1;
-        
         bgCtx.beginPath();
         bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         bgCtx.fillStyle = `hsla(${p.hue}, 70%, 60%, 0.5)`;
         bgCtx.fill();
-        
         for (let j = i + 1; j < bgParticles.length; j++) {
             const q = bgParticles[j];
             const dist = Math.hypot(p.x - q.x, p.y - q.y);
@@ -660,7 +626,6 @@ function drawBg() {
             }
         }
     });
-    
     requestAnimationFrame(drawBg);
 }
 
@@ -670,17 +635,10 @@ window.addEventListener('resize', () => {
     initBgCanvas();
 });
 
-// === ЧАСТИЦЫ ===
 function spawnParticles(x, y, color, count = 8) {
     if (!settings.particles || settings.graphics === '2d') return;
     for (let i = 0; i < count; i++) {
-        particlesList.push({
-            x, y,
-            vx: (Math.random() - 0.5) * 5,
-            vy: (Math.random() - 0.5) * 5,
-            life: 1, color,
-            size: Math.random() * 4 + 2
-        });
+        particlesList.push({ x, y, vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5, life: 1, color, size: Math.random() * 4 + 2 });
     }
 }
 
@@ -705,7 +663,6 @@ function drawParticles() {
     ctx.globalAlpha = 1;
 }
 
-// === УВЕДОМЛЕНИЯ ===
 function notify(text) {
     const el = document.getElementById('notification');
     el.textContent = text;
@@ -713,7 +670,6 @@ function notify(text) {
     setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-// === ПОДСКАЗКИ ===
 const HINTS = [
     '💡 Кликай по красным кубикам — они меняют цвет на синий.',
     '💡 Помни: клик переключает 4 соседа — думай наперёд.',
@@ -735,21 +691,18 @@ function showBotHint() {
     setTimeout(() => el.classList.remove('show'), 3500);
 }
 
-// === ИНИЦИАЛИЗАЦИЯ ===
 function initGrid(size = 5, preFill = false) {
     SIZE = size;
     grid = [];
     const canvasSize = SIZE * TILE_SIZE + OFFSET_X * 2;
     canvas.width = canvasSize;
     canvas.height = canvasSize;
-    
     for (let y = 0; y < SIZE; y++) {
         grid[y] = [];
         for (let x = 0; x < SIZE; x++) {
             grid[y][x] = preFill ? (Math.random() < 0.4 ? 1 : 0) : 0;
         }
     }
-    
     if (isAllOff()) initGrid(size, preFill);
 }
 
@@ -760,13 +713,11 @@ function isAllOff() {
     return true;
 }
 
-// === РИСОВАНИЕ КУБИКА ===
 function drawCube(x, y, value, isHovered = false) {
     const px = OFFSET_X + x * TILE_SIZE;
     const py = OFFSET_Y + y * TILE_SIZE;
     const size = TILE_SIZE - 8;
     
-    // === 2D РЕЖИМ ===
     if (settings.graphics === '2d') {
         const color = value === 1 ? '#ff4060' : '#2a3a5a';
         const hoverColor = value === 1 ? '#ff6080' : '#4a5a7a';
@@ -778,19 +729,15 @@ function drawCube(x, y, value, isHovered = false) {
         return;
     }
     
-    // === 2.5D РЕЖИМ ===
     if (settings.graphics === '2_5d') {
         const depth = 8;
         const pulse = value === 1 ? 0.95 + Math.sin(Date.now() * 0.004) * 0.05 : 1;
         const hoverOffset = isHovered ? -2 : 0;
-        
         const topColor = value === 1 ? `rgb(${Math.floor(255*pulse)}, ${Math.floor(120*pulse)}, ${Math.floor(140*pulse)})` : '#4a5a7a';
         const frontColor = value === 1 ? `rgb(${Math.floor(220*pulse)}, ${Math.floor(50*pulse)}, ${Math.floor(80*pulse)})` : '#1a2a45';
         const sideColor = value === 1 ? `rgb(${Math.floor(160*pulse)}, ${Math.floor(30*pulse)}, ${Math.floor(60*pulse)})` : '#0f1a30';
-        
         ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
         ctx.fillRect(px + 3, py + 3 + hoverOffset, size, size);
-        
         ctx.fillStyle = topColor;
         ctx.beginPath();
         ctx.moveTo(px, py + hoverOffset);
@@ -799,7 +746,6 @@ function drawCube(x, y, value, isHovered = false) {
         ctx.lineTo(px + size, py + hoverOffset);
         ctx.closePath();
         ctx.fill();
-        
         ctx.fillStyle = sideColor;
         ctx.beginPath();
         ctx.moveTo(px + size, py + hoverOffset);
@@ -808,28 +754,23 @@ function drawCube(x, y, value, isHovered = false) {
         ctx.lineTo(px + size, py + size + hoverOffset);
         ctx.closePath();
         ctx.fill();
-        
         ctx.fillStyle = frontColor;
         ctx.fillRect(px, py + hoverOffset, size, size);
-        
         ctx.strokeStyle = isHovered ? '#ffd040' : (value === 1 ? '#ffa0b0' : '#5a6a8a');
         ctx.lineWidth = isHovered ? 2 : 1.5;
         ctx.strokeRect(px, py + hoverOffset, size, size);
         return;
     }
     
-    // === 3D РЕЖИМ ===
     if (settings.graphics === '3d') {
         const depthX = 20;
         const depthY = 14;
         const pulse = value === 1 ? 0.9 + Math.sin(Date.now() * 0.005) * 0.1 : 1;
         const hoverOffset = isHovered ? -5 : 0;
-        
         const topColor = value === 1 ? `rgb(${Math.floor(255*pulse)}, ${Math.floor(150*pulse)}, ${Math.floor(170*pulse)})` : '#6a7aaa';
         const frontColor = value === 1 ? `rgb(${Math.floor(240*pulse)}, ${Math.floor(40*pulse)}, ${Math.floor(70*pulse)})` : '#1a2a45';
         const sideColor = value === 1 ? `rgb(${Math.floor(180*pulse)}, ${Math.floor(20*pulse)}, ${Math.floor(50*pulse)})` : '#0a1220';
         const frontTopColor = value === 1 ? `rgb(${Math.floor(255*pulse)}, ${Math.floor(90*pulse)}, ${Math.floor(120*pulse)})` : '#2a3a55';
-        
         if (value === 1) {
             ctx.shadowColor = 'rgba(255, 64, 96, 1)';
             ctx.shadowBlur = isHovered ? 60 : 40;
@@ -837,7 +778,6 @@ function drawCube(x, y, value, isHovered = false) {
             ctx.shadowColor = 'rgba(78, 201, 176, 1)';
             ctx.shadowBlur = 40;
         }
-        
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
         ctx.beginPath();
         ctx.moveTo(px + 10, py + 10 + hoverOffset);
@@ -846,7 +786,6 @@ function drawCube(x, y, value, isHovered = false) {
         ctx.lineTo(px + 15, py + size + 15 + hoverOffset);
         ctx.closePath();
         ctx.fill();
-        
         ctx.fillStyle = topColor;
         ctx.beginPath();
         ctx.moveTo(px, py + hoverOffset);
@@ -855,7 +794,6 @@ function drawCube(x, y, value, isHovered = false) {
         ctx.lineTo(px + size, py + hoverOffset);
         ctx.closePath();
         ctx.fill();
-        
         ctx.fillStyle = sideColor;
         ctx.beginPath();
         ctx.moveTo(px + size, py + hoverOffset);
@@ -864,21 +802,17 @@ function drawCube(x, y, value, isHovered = false) {
         ctx.lineTo(px + size, py + size + hoverOffset);
         ctx.closePath();
         ctx.fill();
-        
         ctx.fillStyle = frontColor;
         ctx.fillRect(px, py + hoverOffset, size, size);
-        
         const gradient = ctx.createLinearGradient(px, py, px, py + size);
         gradient.addColorStop(0, frontTopColor);
         gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
         gradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
         ctx.fillStyle = gradient;
         ctx.fillRect(px, py + hoverOffset, size, size);
-        
         ctx.strokeStyle = isHovered ? '#ffd040' : (value === 1 ? '#ffc0d0' : '#6a7a9a');
         ctx.lineWidth = isHovered ? 3 : 1.5;
         ctx.strokeRect(px, py + hoverOffset, size, size);
-        
         if (settings.particles) {
             ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
             ctx.beginPath();
@@ -888,12 +822,10 @@ function drawCube(x, y, value, isHovered = false) {
             ctx.closePath();
             ctx.fill();
         }
-        
         ctx.shadowBlur = 0;
     }
 }
 
-// === РИСОВАНИЕ ===
 function draw() {
     if (settings.graphics !== '2d') {
         const bgGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width);
@@ -904,50 +836,35 @@ function draw() {
         ctx.fillStyle = '#0a0e1a';
     }
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
     for (let y = 0; y < SIZE; y++) {
         for (let x = 0; x < SIZE; x++) {
             const isHovered = (hoveredCell.x === x && hoveredCell.y === y);
             drawCube(x, y, grid[y][x], isHovered);
         }
     }
-    
     if (settings.graphics !== '2d') {
         updateParticles();
         drawParticles();
     }
-    
     requestAnimationFrame(draw);
 }
 
-// === ЛОГИКА ===
 function toggle(x, y) {
     if (win) return;
-    
     const wasRed = grid[y][x] === 1;
-    
     grid[y][x] = 1 - grid[y][x];
     if (y > 0) grid[y-1][x] = 1 - grid[y-1][x];
     if (y < SIZE-1) grid[y+1][x] = 1 - grid[y+1][x];
     if (x > 0) grid[y][x-1] = 1 - grid[y][x-1];
     if (x < SIZE-1) grid[y][x+1] = 1 - grid[y][x+1];
-    
     const px = OFFSET_X + x * TILE_SIZE + TILE_SIZE/2;
     const py = OFFSET_Y + y * TILE_SIZE + TILE_SIZE/2;
     spawnParticles(px, py, wasRed ? '#4ec9b0' : '#ff4060', 10);
-    
-    // === КОМБО ===
     const now = Date.now();
-    if (now - lastMoveTime < 1500) {
-        comboCounter++;
-    } else {
-        comboCounter = 1;
-    }
+    if (now - lastMoveTime < 1500) comboCounter++;
+    else comboCounter = 1;
     lastMoveTime = now;
-    
     if (comboCounter > maxCombo) maxCombo = comboCounter;
-    
-    // Показываем комбо
     const comboBox = document.getElementById('comboBox');
     if (comboCounter >= 2) {
         comboBox.classList.add('show');
@@ -955,13 +872,7 @@ function toggle(x, y) {
     } else {
         comboBox.classList.remove('show');
     }
-    
-    // Звук за комбо
-    if (comboCounter >= 2) {
-        soundCombo(comboCounter);
-    }
-    
-    // Сбрасываем комбо через 1.5 секунды
+    if (comboCounter >= 2) soundCombo(comboCounter);
     if (comboTimeout) clearTimeout(comboTimeout);
     comboTimeout = setTimeout(() => {
         comboCounter = 0;
@@ -975,9 +886,7 @@ function playerMove(x, y) {
     moves++;
     document.getElementById('moves').textContent = moves;
     soundClick();
-    
     if (isAllOff()) { onWin('Ты'); return; }
-    
     if (mode === 'bot') {
         isPlayerTurn = false;
         document.getElementById('turn').textContent = 'Бот';
@@ -988,7 +897,6 @@ function playerMove(x, y) {
 function botMove() {
     if (win) return;
     const move = getBotMove();
-    
     if (move) {
         toggle(move.x, move.y);
         botMoveCount++;
@@ -996,7 +904,6 @@ function botMove() {
         soundBot();
         if (isAllOff()) { onWin('Бот'); return; }
     }
-    
     isPlayerTurn = true;
     document.getElementById('turn').textContent = 'Твой';
     if (botDifficulty === 'tutorial') showBotHint();
@@ -1012,9 +919,7 @@ function getBotMove() {
     for (let y = 0; y < SIZE; y++)
         for (let x = 0; x < SIZE; x++)
             if (grid[y][x] === 1) reds.push({ x, y });
-    
     if (reds.length === 0) return null;
-    
     if (botDifficulty === 'tutorial') return findBestMove();
     else if (botDifficulty === 'easy') return reds[Math.floor(Math.random() * reds.length)];
     else if (botDifficulty === 'medium') return reds[0];
@@ -1061,7 +966,6 @@ function countReds() {
     return count;
 }
 
-// === ДОСТИЖЕНИЯ ===
 const ACHIEVEMENTS = {
     first_win: { name: 'Первая победа', desc: 'Реши первую головоломку', icon: '🏆' },
     level_5: { name: 'Опытный', desc: 'Пройди 5 уровень', icon: '⭐' },
@@ -1106,7 +1010,6 @@ function renderAchievements() {
     }
 }
 
-// === НАСТРОЙКИ ===
 function toggleMusic() {
     settings.music = !settings.music;
     localStorage.setItem('cubeSettings', JSON.stringify(settings));
@@ -1172,22 +1075,18 @@ function loadSettings() {
     document.getElementById('particlesBtn').classList.toggle('active', settings.particles);
 }
 
-// === ПОБЕДА ===
 function onWin(who) {
     win = true;
     soundWin();
-    
     const timeSpent = Math.floor((Date.now() - gameStartTime) / 1000);
     document.getElementById('winMoves').textContent = moves;
     document.getElementById('winTime').textContent = timeSpent;
     document.getElementById('winCombo').textContent = maxCombo;
-    
     statsData.games++;
     statsData.totalMoves += moves;
     if (who === 'Ты') statsData.wins++;
     if (timeSpent < statsData.bestTime) statsData.bestTime = timeSpent;
     localStorage.setItem('cubeStats', JSON.stringify(statsData));
-    
     if (mode === 'bot') {
         document.getElementById('winTitle').textContent = who === 'Ты' ? '🎉 ТЫ ПОБЕДИЛ!' : '😢 БОТ ПОБЕДИЛ';
         if (who === 'Ты' && botDifficulty !== 'tutorial') {
@@ -1197,15 +1096,12 @@ function onWin(who) {
     } else {
         document.getElementById('winTitle').textContent = '🎉 ПОБЕДА!';
     }
-    
     let stars = 1;
     const minMoves = SIZE * SIZE;
     if (moves <= minMoves * 0.7) stars = 3;
     else if (moves <= minMoves * 1.2) stars = 2;
     if (maxCombo >= 5) stars = 3;
-    
     document.getElementById('stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
-    
     if (who === 'Ты') {
         unlockAchievement('first_win');
         if (stars === 3) unlockAchievement('three_stars');
@@ -1218,34 +1114,28 @@ function onWin(who) {
         }
         if (maxCombo >= 5) unlockAchievement('combo_master');
     }
-    
     if (mode !== 'bot' && who === 'Ты') saveRecord(stars, timeSpent, moves);
     if (timerInterval) clearInterval(timerInterval);
-    
     setTimeout(() => {
         document.getElementById('gameScreen').classList.remove('active');
         document.getElementById('winScreen').classList.add('active');
     }, 500);
 }
 
-// === РЕЖИМЫ ===
 function startMode(m) {
     soundButton();
     if (m === 'tutorial') { showScreen('tutorialScreen'); return; }
     if (m === 'botSetup') { showScreen('botSetupScreen'); return; }
-    
     mode = m;
     showScreen('gameScreen');
     document.getElementById('timerBox').style.display = 'none';
     document.getElementById('botBox').style.display = 'none';
     document.getElementById('turnBox').style.display = 'none';
-    
     win = false; moves = 0; botMoveCount = 0; isPlayerTurn = true;
     comboCounter = 0; maxCombo = 0; hintIndex = 0;
     document.getElementById('comboBox').classList.remove('show');
     document.getElementById('moves').textContent = 0;
     gameStartTime = Date.now();
-    
     if (m === 'levels') {
         currentLevel = 1;
         document.getElementById('level').textContent = 1;
@@ -1272,14 +1162,12 @@ function startBotGame(difficulty) {
     document.getElementById('turnBox').style.display = 'block';
     document.getElementById('botMoves').textContent = 0;
     document.getElementById('turn').textContent = 'Твой';
-    
     win = false; moves = 0; botMoveCount = 0; isPlayerTurn = true;
     comboCounter = 0; maxCombo = 0; hintIndex = 0;
     document.getElementById('comboBox').classList.remove('show');
     document.getElementById('moves').textContent = 0;
     gameStartTime = Date.now();
     initGrid(4, true);
-    
     const names = { tutorial: '📖 Обучение', easy: '🟢 Лёгкий', medium: '🟡 Средний', hard: '🟠 Сложный', expert: '🔴 Хард' };
     notify('🤖 ' + names[difficulty]);
     if (difficulty === 'tutorial') setTimeout(() => showBotHint(), 1000);
@@ -1397,7 +1285,6 @@ function saveRecord(stars, time, moves) {
     } catch (e) {}
 }
 
-// === КЛИК ===
 function getGridCoords(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
@@ -1449,7 +1336,6 @@ canvas.addEventListener('mouseleave', () => {
     hoveredCell = { x: -1, y: -1 };
 });
 
-// === СТАРТ ===
 loadSettings();
 initBgCanvas();
 drawBg();
