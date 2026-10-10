@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Cube Puzzle 3D</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background: #0a0e1a;
+    color: #fff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    overflow: hidden;
+    touch-action: none;
+    user-select: none;
+}
+
+#bgCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
+#container {
+    text-align: center;
+    padding: 15px;
+    max-width: 100vw;
+    position: relative;
+    z-index: 1;
+}
+
+h1 {
+    font-size: 26px;
+    color: #4ec9b0;
+    margin-bottom: 15px;
+    text-shadow: 0 0 25px rgba(78, 201, 176, 0.7);
+    letter-spacing: 1px;
+}
+
+canvas#gameCanvas {
+    display: block;
+    margin: 0 auto;
+    border-radius: 16px;
+    box-shadow: 0 0 60px rgba(78, 201, 176, 0.4);
+    cursor: pointer;
+    max-width: 95vw;
+    height: auto;
+    background: #0a0e1a;
+    transition: box-shadow 0.3s;
+}
+
+canvas#gameCanvas.graphics-2d {
+    box-shadow: 0 0 20px rgba(78, 201, 176, 0.3);
+}
+
+canvas#gameCanvas.graphics-3d {
+    box-shadow: 0 0 80px rgba(78, 201, 176, 0.6), 0 0 120px rgba(255, 64, 96, 0.2);
+}
+
+.buttons {
+    margin-top: 12px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 12px 22px;
+    background: linear-gradient(135deg, #4ec9b0 0%, #2a9d8f 100%);
+    color: #0a0e1a;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 20px rgba(78, 201, 176, 0.5);
+    font-family: inherit;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(78, 201, 176, 0.7);
+}
+
+button:active { transform: translateY(0) scale(0.96); }
+
+button.secondary {
+    background: rgba(78, 201, 176, 0.12);
+    color: #4ec9b0;
+    border: 1px solid rgba(78, 201, 176, 0.4);
+    box-shadow: none;
+}
+
+#menuScreen, #gameScreen, #winScreen, #tutorialScreen, #botSetupScreen, #recordsScreen, #settingsScreen, #achievementsScreen, #statsScreen {
+    display: none;
+}
+
+.active { display: block !important; }
+
+#menuScreen h2 {
+    color: #ffd040;
+    margin-bottom: 20px;
+    font-size: 22px;
+    text-shadow: 0 0 15px rgba(255, 208, 64, 0.5);
+}
+
+.menu-btn {
+    display: block;
+    width: 280px;
+    margin: 10px auto;
+    padding: 16px;
+    font-size: 16px;
+    text-align: center;
+}
+
+#tutorialScreen, #botSetupScreen, #recordsScreen, #settingsScreen, #achievementsScreen, #statsScreen {
+    max-width: 500px;
+    padding: 30px;
+    background: rgba(20, 28, 45, 0.95);
+    border-radius: 18px;
+    border: 2px solid #4ec9b0;
+    margin: 20px auto;
+    text-align: left;
+    box-shadow: 0 0 50px rgba(78, 201, 176, 0.3);
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+#tutorialScreen h2, #botSetupScreen h2, #recordsScreen h2, #settingsScreen h2, #achievementsScreen h2, #statsScreen h2 {
+    color: #4ec9b0;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 22px;
+}
+
+#tutorialScreen p, #botSetupScreen p {
+    margin: 10px 0;
+    line-height: 1.7;
+    font-size: 14px;
+}
+
+.highlight { color: #ffd040; font-weight: bold; }
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(78, 201, 176, 0.2);
+}
+
+.setting-row label {
+    color: #d4d4d4;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.setting-btn-group {
+    display: flex;
+    gap: 8px;
+}
+
+.setting-btn {
+    padding: 8px 14px;
+    background: rgba(78, 201, 176, 0.15);
+    color: #4ec9b0;
+    border: 1px solid rgba(78, 201, 176, 0.4);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: bold;
+    transition: all 0.2s;
+}
+
+.setting-btn.active {
+    background: #4ec9b0;
+    color: #0a0e1a;
+}
+
+.setting-btn:hover {
+    transform: scale(1.05);
+}
+
+.achievement {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    margin: 6px 0;
+    background: rgba(78, 201, 176, 0.08);
+    border-left: 4px solid #4ec9b0;
+    border-radius: 6px;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.achievement.locked {
+    opacity: 0.4;
+    border-left-color: #3a4a6a;
+}
+
+.achievement.unlocked {
+    opacity: 1;
+    border-left-color: #ffd040;
+    background: rgba(255, 208, 64, 0.1);
+    box-shadow: 0 0 15px rgba(255, 208, 64, 0.3);
+}
+
+.achievement-icon { font-size: 24px; }
+.achievement-info { flex: 1; text-align: left; }
+.achievement-name { color: #4ec9b0; font-weight: bold; }
+.achievement-desc { color: #8a9aaa; font-size: 12px; }
+
+.record-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 15px;
+    margin: 6px 0;
+    background: rgba(78, 201, 176, 0.1);
+    border-left: 3px solid #4ec9b0;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.record-item .mode-name { color: #4ec9b0; font-weight: bold; }
+.record-item .record-stats { color: #ffd040; }
+
+#winScreen {
+    padding: 30px;
+    background: rgba(20, 28, 45, 0.95);
+    border-radius: 18px;
+    border: 2px solid #ffd040;
+    margin: 20px auto;
+    max-width: 400px;
+    animation: popIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    box-shadow: 0 0 60px rgba(255, 208, 64, 0.4);
+}
+
+@keyframes popIn {
+    from { transform: scale(0.3) rotate(-10deg); opacity: 0; }
+    to { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+#winScreen h2 { color: #ffd040; font-size: 34px; margin-bottom: 15px; text-shadow: 0 0 20px rgba(255, 208, 64, 0.8); }
+#winScreen .stars { font-size: 48px; margin: 15px 0; letter-spacing: 5px; }
+#winScreen p { margin: 8px 0; font-size: 16px; }
+
+#hud {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 12px;
+    font-size: 15px;
+    flex-wrap: wrap;
+}
+
+#hud div {
+    background: rgba(20, 28, 45, 0.8);
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(78, 201, 176, 0.4);
+    box-shadow: 0 0 15px rgba(78, 201, 176, 0.2);
+}
+
+#hud span { color: #4ec9b0; font-weight: bold; }
+
+#comboBox {
+    background: rgba(255, 64, 96, 0.3) !important;
+    border-color: #ff4060 !important;
+    display: none;
+}
+
+#comboBox.show {
+    display: block !important;
+    animation: popIn 0.3s ease;
+}
+
+#notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: linear-gradient(135deg, #4ec9b0, #2a9d8f);
+    color: #0a0e1a;
+    padding: 14px 28px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 16px;
+    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    z-index: 1000;
+    pointer-events: none;
+    box-shadow: 0 8px 30px rgba(78, 201, 176, 0.6);
+}
+
+#notification.show { transform: translateX(-50%) translateY(0); }
+
+#botHint {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 208, 64, 0.95);
+    color: #0a0e1a;
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 15px;
+    z-index: 999;
+    display: none;
+    box-shadow: 0 8px 30px rgba(255, 208, 64, 0.5);
+    max-width: 90vw;
+    text-align: center;
+}
+
+#botHint.show { display: block; animation: popIn 0.4s ease; }
+
+.difficulty-btn {
+    display: block;
+    width: 100%;
+    margin: 8px 0;
+    padding: 14px;
+    font-size: 15px;
+    text-align: left;
+    background: rgba(78, 201, 176, 0.15);
+    color: #4ec9b0;
+    border: 1px solid rgba(78, 201, 176, 0.4);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    font-weight: bold;
+}
+
+.difficulty-btn:hover {
+    background: rgba(78, 201, 176, 0.3);
+    transform: translateX(5px);
+}
+
+.difficulty-btn.easy { border-left: 4px solid #4ec9b0; }
+.difficulty-btn.medium { border-left: 4px solid #ffd040; }
+.difficulty-btn.hard { border-left: 4px solid #ff8040; }
+.difficulty-btn.expert { border-left: 4px solid #ff4060; }
+.difficulty-btn.tutorial { border-left: 4px solid #a0a0ff; }
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+
+<div id="container">
+
+    <div id="menuScreen" class="active">
+        <h1>🎮 Cube Puzzle 3D</h1>
+        <h2>Выбери режим</h2>
+        <button class="menu-btn" onclick="startMode('tutorial')">📖 Обучение</button>
+        <button class="menu-btn" onclick="startMode('levels')">🎯 Уровни (10)</button>
+        <button class="menu-btn" onclick="startMode('endless')">⚡ Бесконечный</button>
+        <button class="menu-btn" onclick="startMode('botSetup')">🤖 Против бота</button>
+        <button class="menu-btn" onclick="startMode('timer')">⏱️ На время</button>
+        <button class="menu-btn secondary" onclick="showRecords()">🏆 Рекорды</button>
+        <button class="menu-btn secondary" onclick="showScreen('achievementsScreen')">🎖️ Достижения</button>
+        <button class="menu-btn secondary" onclick="showStats()">📊 Статистика</button>
+        <button class="menu-btn secondary" onclick="showScreen('settingsScreen')">⚙️ Настройки</button>
+    </div>
+
+    <div id="tutorialScreen">
+        <h2>📖 Как играть</h2>
+        <p><span class="highlight">Цель:</span> сделать все кубики <span class="highlight">СИНИМИ</span>.</p>
+        <p><span class="highlight">Клик по кубику:</span> переключает его <span class="highlight">И 4 соседа</span>.</p>
+        <p><span class="highlight">Комбо:</span> если кликаешь <span class="highlight">правильные кубики подряд</span> за 1.5 сек — комбо растёт!</p>
+        <p><span class="highlight">Совет:</span> думай наперёд, но не тормози — комбо даёт бонус.</p>
+        <button class="menu-btn" onclick="showMenu()">← Назад</button>
+    </div>
+
+    <div id="botSetupScreen">
+        <h2>🤖 Против бота</h2>
+        <p><span class="highlight">Правила:</span> ты ходишь → бот ходит → ты ходишь → ...</p>
+        <p><span class="highlight">Цель:</span> первым сделать все кубики <span class="highlight">СИНИМИ</span>.</p>
+        <p>Выбери сложность:</p>
+        <button class="difficulty-btn tutorial" onclick="startBotGame('tutorial')">📖 Обучение — подсказки</button>
+        <button class="difficulty-btn easy" onclick="startBotGame('easy')">🟢 Лёгкий — бот тупит</button>
+        <button class="difficulty-btn medium" onclick="startBotGame('medium')">🟡 Средний — бот нормальный</button>
+        <button class="difficulty-btn hard" onclick="startBotGame('hard')">🟠 Сложный — бот умный</button>
+        <button class="difficulty-btn expert" onclick="startBotGame('expert')">🔴 Хард — бот читер</button>
+        <button class="menu-btn secondary" onclick="showMenu()" style="margin-top: 15px;">← Назад</button>
+    </div>
+
+    <div id="recordsScreen">
+        <h2>🏆 Рекорды</h2>
+        <div id="recordsList"></div>
+        <button class="menu-btn secondary" onclick="showMenu()" style="margin-top: 20px;">← Назад</button>
+    </div>
+
+    <div id="achievementsScreen">
+        <h2>🎖️ Достижения</h2>
+        <div id="achievementsList"></div>
+        <button class="menu-btn secondary" onclick="showMenu()" style="margin-top: 20px;">← Назад</button>
+    </div>
+
+    <div id="statsScreen">
+        <h2>📊 Статистика</h2>
+        <div id="statsContent"></div>
+        <button class="menu-btn secondary" onclick="showMenu()" style="margin-top: 20px;">← Назад</button>
+    </div>
+
+    <div id="settingsScreen">
+        <h2>⚙️ Настройки</h2>
+
+        <div class="setting-row">
+            <label>🎵 Музыка</label>
+            <div class="setting-btn-group">
+                <button class="setting-btn" onclick="toggleMusic()" id="musicBtn">ВКЛ</button>
+            </div>
+        </div>
+
+        <div class="setting-row">
+            <label>🔊 Звуки</label>
+            <div class="setting-btn-group">
+                <button class="setting-btn" onclick="toggleSound()" id="soundBtn">ВКЛ</button>
+            </div>
+        </div>
+
+        <div class="setting-row">
+            <label>🎨 Графика</label>
+            <div class="setting-btn-group">
+                <button class="setting-btn" onclick="setGraphics('2d')" id="graphics2D">2D</button>
+                <button class="setting-btn active" onclick="setGraphics('2_5d')" id="graphics2_5D">2.5D</button>
+                <button class="setting-btn" onclick="setGraphics('3d')" id="graphics3D">3D</button>
+            </div>
+        </div>
+
+        <div class="setting-row">
+            <label>🌌 Анимированный фон</label>
+            <div class="setting-btn-group">
+                <button class="setting-btn" onclick="toggleBg()" id="bgBtn">ВКЛ</button>
+            </div>
+        </div>
+
+        <div class="setting-row">
+            <label>✨ Частицы</label>
+            <div class="setting-btn-group">
+                <button class="setting-btn" onclick="toggleParticles()" id="particlesBtn">ВКЛ</button>
+            </div>
+        </div>
+
+        <button class="menu-btn secondary" onclick="showMenu()" style="margin-top: 20px;">← Назад</button>
+    </div>
+
+    <div id="gameScreen">
+        <div id="hud">
+            <div>Ходы: <span id="moves">0</span></div>
+            <div>Уровень: <span id="level">1</span></div>
+            <div id="comboBox">🔥 Комбо: <span id="comboValue">0</span></div>
+            <div id="timerBox" style="display:none;">⏱️ <span id="timer">30</span>с</div>
+            <div id="botBox" style="display:none;">🤖 <span id="botMoves">0</span></div>
+            <div id="turnBox" style="display:none;">Ход: <span id="turn">Твой</span></div>
+        </div>
+        <canvas id="gameCanvas"></canvas>
+        <div class="buttons">
+            <button class="secondary" onclick="restartCurrent()">🔄 Заново</button>
+            <button class="secondary" onclick="showMenu()">🏠 Меню</button>
+        </div>
+    </div>
+
+    <div id="winScreen">
+        <h2 id="winTitle">🎉 ПОБЕДА!</h2>
+        <div class="stars" id="stars">⭐⭐⭐</div>
+        <p>Ходов: <span id="winMoves">0</span></p>
+        <p>Время: <span id="winTime">0</span> сек</p>
+        <p>Макс. комбо: <span id="winCombo">0</span></p>
+        <div class="buttons">
+            <button onclick="nextAction()">➡ Дальше</button>
+            <button class="secondary" onclick="showMenu()">🏠 Меню</button>
+        </div>
+    </div>
+
+</div>
+
+<div id="notification"></div>
+<div id="botHint"></div>
+
+<script>
+const TILE_SIZE = 72;
+const OFFSET_X = 45;
+const OFFSET_Y = 45;
+
+let settings = {
+    music: true,
+    sound: true,
+    graphics: '2_5d',
+    bgAnim: true,
+    particles: true
+};
+
+let SIZE = 5;
+let grid = [];
+let moves = 0;
+let win = false;
+let mode = 'levels';
+let timer = 30;
+let timerInterval = null;
+let gameStartTime = 0;
+let botMoveCount = 0;
+let botDifficulty = 'medium';
+let currentLevel = 1;
+let isPlayerTurn = true;
+let botTimeout = null;
+let hoveredCell = { x: -1, y: -1 };
+let particlesList = [];
+let achievements = JSON.parse(localStorage.getItem('cubeAchievements') || '{}');
+let comboCounter = 0;
+let maxCombo = 0;
+let lastMoveTime = 0;
+let comboTimeout = null;
+let endlessCounter = 0;
+let hintIndex = 0;
+let statsData = JSON.parse(localStorage.getItem('cubeStats') || '{"games":0,"wins":0,"totalMoves":0,"bestTime":99999}');
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const bgCanvas = document.getElementById('bgCanvas');
+const bgCtx = bgCanvas.getContext('2d');
+
+// === ЗВУКИ ===
+let audioCtx = null;
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+function playSound(freq, duration = 0.1, type = 'sine', volume = 0.5) {
+    if (!settings.sound) return;
+    try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    } catch (e) {}
+}
+
+function soundClick() { playSound(700, 0.08, 'square', 0.4); }
+function soundCombo(level) { playSound(600 + level * 80, 0.12, 'sine', 0.5); }
+function soundBot() { playSound(400, 0.1, 'triangle', 0.4); }
+function soundWin() {
+    playSound(523, 0.15, 'sine', 0.5);
+    setTimeout(() => playSound(659, 0.15, 'sine', 0.5), 150);
+    setTimeout(() => playSound(784, 0.4, 'sine', 0.6), 300);
+}
+function soundFail() { playSound(180, 0.4, 'sawtooth', 0.5); }
+function soundButton() { playSound(440, 0.06, 'sine', 0.3); }
+
+// === МУЗЫКА ===
+let musicInterval = null;
+function startMusic() {
+    if (musicInterval || !settings.music) return;
+    try {
+        initAudio();
+        const notes = [130.81, 146.83, 164.81, 174.61, 196.00, 220.00, 246.94, 261.63];
+        let i = 0;
+        musicInterval = setInterval(() => {
+            if (!audioCtx || !settings.music) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.value = notes[i % notes.length];
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.15, audioCtx.currentTime + 0.2);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.8);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.8);
+            i++;
+        }, 1200);
+    } catch (e) {}
+}
+
+function stopMusic() {
+    if (musicInterval) {
+        clearInterval(musicInterval);
+        musicInterval = null;
+    }
+}
+
+// === ФОН ===
+let bgParticles = [];
+let bgTime = 0;
+
+function initBgCanvas() {
+    bgCanvas.width = window.innerWidth;
+    bgCanvas.height = window.innerHeight;
+    bgParticles = [];
+    for (let i = 0; i < 60; i++) {
+        bgParticles.push({
+            x: Math.random() * bgCanvas.width,
+            y: Math.random() * bgCanvas.height,
+            vx: (Math.random() - 0.5) * 0.4,
+            vy: (Math.random() - 0.5) * 0.4,
+            r: Math.random() * 2 + 1,
+            hue: Math.random() * 60 + 140
+        });
+    }
+}
+
+function drawBg() {
+    if (!settings.bgAnim) {
+        bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+        return;
+    }
+    
+    bgTime += 0.01;
+    const grad = bgCtx.createRadialGradient(
+        bgCanvas.width / 2 + Math.sin(bgTime) * 100,
+        bgCanvas.height / 2 + Math.cos(bgTime) * 100,
+        0, bgCanvas.width / 2, bgCanvas.height / 2, bgCanvas.width
+    );
+    grad.addColorStop(0, '#1a2340');
+    grad.addColorStop(0.5, '#0f1528');
+    grad.addColorStop(1, '#050810');
+    bgCtx.fillStyle = grad;
+    bgCtx.fillRect(0, 0, bgCanvas.width, bgCanvas.height);
+    
+    bgParticles.forEach((p, i) => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0 || p.x > bgCanvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > bgCanvas.height) p.vy *= -1;
+        
+        bgCtx.beginPath();
+        bgCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        bgCtx.fillStyle = `hsla(${p.hue}, 70%, 60%, 0.5)`;
+        bgCtx.fill();
+        
+        for (let j = i + 1; j < bgParticles.length; j++) {
+            const q = bgParticles[j];
+            const dist = Math.hypot(p.x - q.x, p.y - q.y);
+            if (dist < 120) {
+                bgCtx.beginPath();
+                bgCtx.moveTo(p.x, p.y);
+                bgCtx.lineTo(q.x, q.y);
+                bgCtx.strokeStyle = `hsla(160, 70%, 60%, ${0.15 * (1 - dist/120)})`;
+                bgCtx.lineWidth = 0.5;
+                bgCtx.stroke();
+            }
+        }
+    });
+    
+    requestAnimationFrame(drawBg);
+}
+
+window.addEventListener('resize', () => {
+    bgCanvas.width = window.innerWidth;
+    bgCanvas.height = window.innerHeight;
+    initBgCanvas();
+});
+
+// === ЧАСТИЦЫ ===
+function spawnParticles(x, y, color, count = 8) {
+    if (!settings.particles || settings.graphics === '2d') return;
+    for (let i = 0; i < count; i++) {
+        particlesList.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 5,
+            vy: (Math.random() - 0.5) * 5,
+            life: 1, color,
+            size: Math.random() * 4 + 2
+        });
+    }
+}
+
+function updateParticles() {
+    for (let i = particlesList.length - 1; i >= 0; i--) {
+        const p = particlesList[i];
+        p.x += p.vx; p.y += p.vy;
+        p.vx *= 0.95; p.vy *= 0.95;
+        p.life -= 0.03;
+        if (p.life <= 0) particlesList.splice(i, 1);
+    }
+}
+
+function drawParticles() {
+    particlesList.forEach(p => {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+        ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+}
+
+// === УВЕДОМЛЕНИЯ ===
+function notify(text) {
+    const el = document.getElementById('notification');
+    el.textContent = text;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// === ПОДСКАЗКИ ===
+const HINTS = [
+    '💡 Кликай по красным кубикам — они меняют цвет на синий.',
+    '💡 Помни: клик переключает 4 соседа — думай наперёд.',
+    '💡 Иногда лучше кликнуть по синему, чтобы убрать красный.',
+    '💡 Углы — сложные. Начинай с центра.',
+    '💡 Меньше ходов — больше звёзд.',
+    '💡 Быстрые клики подряд дают комбо.',
+    '💡 Смотри на общий рисунок, а не на один кубик.',
+    '💡 Пробуй симметрию — часто работает.',
+    '💡 Если застрял — начни с краёв.',
+    '💡 В режиме на время — не тормози.'
+];
+
+function showBotHint() {
+    const el = document.getElementById('botHint');
+    el.textContent = HINTS[hintIndex % HINTS.length];
+    hintIndex++;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+// === ИНИЦИАЛИЗАЦИЯ ===
+function initGrid(size = 5, preFill = false) {
+    SIZE = size;
+    grid = [];
+    const canvasSize = SIZE * TILE_SIZE + OFFSET_X * 2;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+    
+    for (let y = 0; y < SIZE; y++) {
+        grid[y] = [];
+        for (let x = 0; x < SIZE; x++) {
+            grid[y][x] = preFill ? (Math.random() < 0.4 ? 1 : 0) : 0;
+        }
+    }
+    
+    if (isAllOff()) initGrid(size, preFill);
+}
+
+function isAllOff() {
+    for (let y = 0; y < SIZE; y++)
+        for (let x = 0; x < SIZE; x++)
+            if (grid[y][x] === 1) return false;
+    return true;
+}
+
+// === РИСОВАНИЕ КУБИКА ===
+function drawCube(x, y, value, isHovered = false) {
+    const px = OFFSET_X + x * TILE_SIZE;
+    const py = OFFSET_Y + y * TILE_SIZE;
+    const size = TILE_SIZE - 8;
+    
+    // === 2D РЕЖИМ ===
+    if (settings.graphics === '2d') {
+        const color = value === 1 ? '#ff4060' : '#2a3a5a';
+        const hoverColor = value === 1 ? '#ff6080' : '#4a5a7a';
+        ctx.fillStyle = isHovered ? hoverColor : color;
+        ctx.fillRect(px, py, size, size);
+        ctx.strokeStyle = isHovered ? '#ffd040' : (value === 1 ? '#ff8090' : '#4a5a7a');
+        ctx.lineWidth = isHovered ? 3 : 2;
+        ctx.strokeRect(px, py, size, size);
+        return;
+    }
+    
+    // === 2.5D РЕЖИМ ===
+    if (settings.graphics === '2_5d') {
+        const depth = 8;
+        const pulse = value === 1 ? 0.95 + Math.sin(Date.now() * 0.004) * 0.05 : 1;
+        const hoverOffset = isHovered ? -2 : 0;
+        
+        const topColor = value === 1 ? `rgb(${Math.floor(255*pulse)}, ${Math.floor(120*pulse)}, ${Math.floor(140*pulse)})` : '#4a5a7a';
+        const frontColor = value === 1 ? `rgb(${Math.floor(220*pulse)}, ${Math.floor(50*pulse)}, ${Math.floor(80*pulse)})` : '#1a2a45';
+        const sideColor = value === 1 ? `rgb(${Math.floor(160*pulse)}, ${Math.floor(30*pulse)}, ${Math.floor(60*pulse)})` : '#0f1a30';
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+        ctx.fillRect(px + 3, py + 3 + hoverOffset, size, size);
+        
+        ctx.fillStyle = topColor;
+        ctx.beginPath();
+        ctx.moveTo(px, py + hoverOffset);
+        ctx.lineTo(px + depth, py - depth + hoverOffset);
+        ctx.lineTo(px + size + depth, py - depth + hoverOffset);
+        ctx.lineTo(px + size, py + hoverOffset);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillStyle = sideColor;
+        ctx.beginPath();
+        ctx.moveTo(px + size, py + hoverOffset);
+        ctx.lineTo(px + size + depth, py - depth + hoverOffset);
+        ctx.lineTo(px + size + depth, py + size - depth + hoverOffset);
+        ctx.lineTo(px + size, py + size + hoverOffset);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillStyle = frontColor;
+        ctx.fillRect(px, py + hoverOffset, size, size);
+        
+        ctx.strokeStyle = isHovered ? '#ffd040' : (value === 1 ? '#ffa0b0' : '#5a6a8a');
+        ctx.lineWidth = isHovered ? 2 : 1.5;
+        ctx.strokeRect(px, py + hoverOffset, size, size);
+        return;
+    }
+    
+    // === 3D РЕЖИМ ===
+    if (settings.graphics === '3d') {
+        const depthX = 20;
+        const depthY = 14;
+        const pulse = value === 1 ? 0.9 + Math.sin(Date.now() * 0.005) * 0.1 : 1;
+        const hoverOffset = isHovered ? -5 : 0;
+        
+        const topColor = value === 1 ? `rgb(${Math.floor(255*pulse)}, ${Math.floor(150*pulse)}, ${Math.floor(170*pulse)})` : '#6a7aaa';
+        const frontColor = value === 1 ? `rgb(${Math.floor(240*pulse)}, ${Math.floor(40*pulse)}, ${Math.floor(70*pulse)})` : '#1a2a45';
+        const sideColor = value === 1 ? `rgb(${Math.floor(180*pulse)}, ${Math.floor(20*pulse)}, ${Math.floor(50*pulse)})` : '#0a1220';
+        const frontTopColor = value === 1 ? `rgb(${Math.floor(255*pulse)}, ${Math.floor(90*pulse)}, ${Math.floor(120*pulse)})` : '#2a3a55';
+        
+        if (value === 1) {
+            ctx.shadowColor = 'rgba(255, 64, 96, 1)';
+            ctx.shadowBlur = isHovered ? 60 : 40;
+        } else if (isHovered) {
+            ctx.shadowColor = 'rgba(78, 201, 176, 1)';
+            ctx.shadowBlur = 40;
+        }
+        
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.beginPath();
+        ctx.moveTo(px + 10, py + 10 + hoverOffset);
+        ctx.lineTo(px + size + 15, py + 10 + hoverOffset);
+        ctx.lineTo(px + size + 20, py + size + 15 + hoverOffset);
+        ctx.lineTo(px + 15, py + size + 15 + hoverOffset);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillStyle = topColor;
+        ctx.beginPath();
+        ctx.moveTo(px, py + hoverOffset);
+        ctx.lineTo(px + depthX, py - depthY + hoverOffset);
+        ctx.lineTo(px + size + depthX, py - depthY + hoverOffset);
+        ctx.lineTo(px + size, py + hoverOffset);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillStyle = sideColor;
+        ctx.beginPath();
+        ctx.moveTo(px + size, py + hoverOffset);
+        ctx.lineTo(px + size + depthX, py - depthY + hoverOffset);
+        ctx.lineTo(px + size + depthX, py + size - depthY + hoverOffset);
+        ctx.lineTo(px + size, py + size + hoverOffset);
+        ctx.closePath();
+        ctx.fill();
+        
+        ctx.fillStyle = frontColor;
+        ctx.fillRect(px, py + hoverOffset, size, size);
+        
+        const gradient = ctx.createLinearGradient(px, py, px, py + size);
+        gradient.addColorStop(0, frontTopColor);
+        gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.5)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(px, py + hoverOffset, size, size);
+        
+        ctx.strokeStyle = isHovered ? '#ffd040' : (value === 1 ? '#ffc0d0' : '#6a7a9a');
+        ctx.lineWidth = isHovered ? 3 : 1.5;
+        ctx.strokeRect(px, py + hoverOffset, size, size);
+        
+        if (settings.particles) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+            ctx.beginPath();
+            ctx.moveTo(px + size * 0.15, py + hoverOffset + size * 0.15);
+            ctx.lineTo(px + size * 0.3, py + hoverOffset + size * 0.1);
+            ctx.lineTo(px + size * 0.25, py + hoverOffset + size * 0.3);
+            ctx.closePath();
+            ctx.fill();
+        }
+        
+        ctx.shadowBlur = 0;
+    }
+}
+
+// === РИСОВАНИЕ ===
+function draw() {
+    if (settings.graphics !== '2d') {
+        const bgGrad = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width);
+        bgGrad.addColorStop(0, settings.graphics === '3d' ? '#2a3350' : '#1a2340');
+        bgGrad.addColorStop(1, '#0a0e1a');
+        ctx.fillStyle = bgGrad;
+    } else {
+        ctx.fillStyle = '#0a0e1a';
+    }
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    for (let y = 0; y < SIZE; y++) {
+        for (let x = 0; x < SIZE; x++) {
+            const isHovered = (hoveredCell.x === x && hoveredCell.y === y);
+            drawCube(x, y, grid[y][x], isHovered);
+        }
+    }
+    
+    if (settings.graphics !== '2d') {
+        updateParticles();
+        drawParticles();
+    }
+    
+    requestAnimationFrame(draw);
+}
+
+// === ЛОГИКА ===
+function toggle(x, y) {
+    if (win) return;
+    
+    const wasRed = grid[y][x] === 1;
+    
+    grid[y][x] = 1 - grid[y][x];
+    if (y > 0) grid[y-1][x] = 1 - grid[y-1][x];
+    if (y < SIZE-1) grid[y+1][x] = 1 - grid[y+1][x];
+    if (x > 0) grid[y][x-1] = 1 - grid[y][x-1];
+    if (x < SIZE-1) grid[y][x+1] = 1 - grid[y][x+1];
+    
+    const px = OFFSET_X + x * TILE_SIZE + TILE_SIZE/2;
+    const py = OFFSET_Y + y * TILE_SIZE + TILE_SIZE/2;
+    spawnParticles(px, py, wasRed ? '#4ec9b0' : '#ff4060', 10);
+    
+    // === КОМБО ===
+    const now = Date.now();
+    if (now - lastMoveTime < 1500) {
+        comboCounter++;
+    } else {
+        comboCounter = 1;
+    }
+    lastMoveTime = now;
+    
+    if (comboCounter > maxCombo) maxCombo = comboCounter;
+    
+    // Показываем комбо
+    const comboBox = document.getElementById('comboBox');
+    if (comboCounter >= 2) {
+        comboBox.classList.add('show');
+        document.getElementById('comboValue').textContent = comboCounter;
+    } else {
+        comboBox.classList.remove('show');
+    }
+    
+    // Звук за комбо
+    if (comboCounter >= 2) {
+        soundCombo(comboCounter);
+    }
+    
+    // Сбрасываем комбо через 1.5 секунды
+    if (comboTimeout) clearTimeout(comboTimeout);
+    comboTimeout = setTimeout(() => {
+        comboCounter = 0;
+        document.getElementById('comboBox').classList.remove('show');
+    }, 1500);
+}
+
+function playerMove(x, y) {
+    if (win || !isPlayerTurn) return;
+    toggle(x, y);
+    moves++;
+    document.getElementById('moves').textContent = moves;
+    soundClick();
+    
+    if (isAllOff()) { onWin('Ты'); return; }
+    
+    if (mode === 'bot') {
+        isPlayerTurn = false;
+        document.getElementById('turn').textContent = 'Бот';
+        botTimeout = setTimeout(botMove, getBotDelay());
+    }
+}
+
+function botMove() {
+    if (win) return;
+    const move = getBotMove();
+    
+    if (move) {
+        toggle(move.x, move.y);
+        botMoveCount++;
+        document.getElementById('botMoves').textContent = botMoveCount;
+        soundBot();
+        if (isAllOff()) { onWin('Бот'); return; }
+    }
+    
+    isPlayerTurn = true;
+    document.getElementById('turn').textContent = 'Твой';
+    if (botDifficulty === 'tutorial') showBotHint();
+}
+
+function getBotDelay() {
+    const delays = { tutorial: 3000, easy: 2000, medium: 1500, hard: 1000, expert: 600 };
+    return delays[botDifficulty] || 1500;
+}
+
+function getBotMove() {
+    const reds = [];
+    for (let y = 0; y < SIZE; y++)
+        for (let x = 0; x < SIZE; x++)
+            if (grid[y][x] === 1) reds.push({ x, y });
+    
+    if (reds.length === 0) return null;
+    
+    if (botDifficulty === 'tutorial') return findBestMove();
+    else if (botDifficulty === 'easy') return reds[Math.floor(Math.random() * reds.length)];
+    else if (botDifficulty === 'medium') return reds[0];
+    else if (botDifficulty === 'hard') {
+        let best = reds[0], bestScore = -1;
+        for (const r of reds) {
+            const score = countRedsAfter(r.x, r.y);
+            if (score > bestScore) { bestScore = score; best = r; }
+        }
+        return best;
+    } else return findBestMove();
+}
+
+function findBestMove() {
+    let best = null, bestScore = -Infinity;
+    for (let y = 0; y < SIZE; y++)
+        for (let x = 0; x < SIZE; x++) {
+            const score = evaluateMove(x, y);
+            if (score > bestScore) { bestScore = score; best = { x, y }; }
+        }
+    return best;
+}
+
+function countRedsAfter(x, y) {
+    const before = countReds();
+    let after = before;
+    if (grid[y][x] === 1) after--; else after++;
+    const neighbors = [[y-1,x],[y+1,x],[y,x-1],[y,x+1]];
+    for (const [ny, nx] of neighbors) {
+        if (ny >= 0 && ny < SIZE && nx >= 0 && nx < SIZE) {
+            if (grid[ny][nx] === 1) after--; else after++;
+        }
+    }
+    return before - after;
+}
+
+function evaluateMove(x, y) { return countRedsAfter(x, y); }
+
+function countReds() {
+    let count = 0;
+    for (let y = 0; y < SIZE; y++)
+        for (let x = 0; x < SIZE; x++)
+            if (grid[y][x] === 1) count++;
+    return count;
+}
+
+// === ДОСТИЖЕНИЯ ===
+const ACHIEVEMENTS = {
+    first_win: { name: 'Первая победа', desc: 'Реши первую головоломку', icon: '🏆' },
+    level_5: { name: 'Опытный', desc: 'Пройди 5 уровень', icon: '⭐' },
+    level_10: { name: 'Мастер', desc: 'Пройди все 10 уровней', icon: '👑' },
+    three_stars: { name: 'Идеально!', desc: 'Получи 3 звезды', icon: '💎' },
+    bot_win: { name: 'Победитель бота', desc: 'Обыграй бота', icon: '🤖' },
+    expert_win: { name: 'Хардкор', desc: 'Обыграй бота на харде', icon: '🔥' },
+    timer_win: { name: 'Скорость', desc: 'Реши головоломку на время', icon: '⏱️' },
+    rich: { name: 'Коллекционер', desc: 'Открой 5 достижений', icon: '🎖️' },
+    endless_10: { name: 'Бесконечность', desc: 'Реши 10 головоломок подряд', icon: '♾️' },
+    combo_master: { name: 'Комбо-мастер', desc: 'Сделай комбо x5', icon: '⚡' },
+    graphics_3d: { name: '3D-мастер', desc: 'Поиграй в 3D-режиме', icon: '🎮' }
+};
+
+function unlockAchievement(key) {
+    if (achievements[key]) return;
+    achievements[key] = true;
+    localStorage.setItem('cubeAchievements', JSON.stringify(achievements));
+    notify('🎖️ Достижение: ' + ACHIEVEMENTS[key].name);
+    soundWin();
+    if (Object.keys(achievements).length >= 5 && !achievements.rich) {
+        setTimeout(() => unlockAchievement('rich'), 2000);
+    }
+}
+
+function renderAchievements() {
+    const list = document.getElementById('achievementsList');
+    list.innerHTML = '';
+    for (const key in ACHIEVEMENTS) {
+        const a = ACHIEVEMENTS[key];
+        const unlocked = achievements[key];
+        const div = document.createElement('div');
+        div.className = 'achievement ' + (unlocked ? 'unlocked' : 'locked');
+        div.innerHTML = `
+            <span class="achievement-icon">${unlocked ? a.icon : '🔒'}</span>
+            <div class="achievement-info">
+                <div class="achievement-name">${a.name}</div>
+                <div class="achievement-desc">${a.desc}</div>
+            </div>
+        `;
+        list.appendChild(div);
+    }
+}
+
+// === НАСТРОЙКИ ===
+function toggleMusic() {
+    settings.music = !settings.music;
+    localStorage.setItem('cubeSettings', JSON.stringify(settings));
+    document.getElementById('musicBtn').textContent = settings.music ? 'ВКЛ' : 'ВЫКЛ';
+    document.getElementById('musicBtn').classList.toggle('active', settings.music);
+    if (settings.music) startMusic();
+    else stopMusic();
+    soundButton();
+}
+
+function toggleSound() {
+    settings.sound = !settings.sound;
+    localStorage.setItem('cubeSettings', JSON.stringify(settings));
+    document.getElementById('soundBtn').textContent = settings.sound ? 'ВКЛ' : 'ВЫКЛ';
+    document.getElementById('soundBtn').classList.toggle('active', settings.sound);
+    if (settings.sound) soundButton();
+}
+
+function setGraphics(level) {
+    settings.graphics = level;
+    localStorage.setItem('cubeSettings', JSON.stringify(settings));
+    document.getElementById('graphics2D').classList.toggle('active', level === '2d');
+    document.getElementById('graphics2_5D').classList.toggle('active', level === '2_5d');
+    document.getElementById('graphics3D').classList.toggle('active', level === '3d');
+    canvas.classList.remove('graphics-2d', 'graphics-3d');
+    if (level === '2d') canvas.classList.add('graphics-2d');
+    if (level === '3d') canvas.classList.add('graphics-3d');
+    soundButton();
+    const names = { '2d': '2D', '2_5d': '2.5D', '3d': '3D' };
+    notify('🎨 Графика: ' + names[level]);
+    if (level === '3d') unlockAchievement('graphics_3d');
+}
+
+function toggleBg() {
+    settings.bgAnim = !settings.bgAnim;
+    localStorage.setItem('cubeSettings', JSON.stringify(settings));
+    document.getElementById('bgBtn').textContent = settings.bgAnim ? 'ВКЛ' : 'ВЫКЛ';
+    document.getElementById('bgBtn').classList.toggle('active', settings.bgAnim);
+    soundButton();
+}
+
+function toggleParticles() {
+    settings.particles = !settings.particles;
+    localStorage.setItem('cubeSettings', JSON.stringify(settings));
+    document.getElementById('particlesBtn').textContent = settings.particles ? 'ВКЛ' : 'ВЫКЛ';
+    document.getElementById('particlesBtn').classList.toggle('active', settings.particles);
+    soundButton();
+}
+
+function loadSettings() {
+    const saved = localStorage.getItem('cubeSettings');
+    if (saved) settings = { ...settings, ...JSON.parse(saved) };
+    document.getElementById('musicBtn').textContent = settings.music ? 'ВКЛ' : 'ВЫКЛ';
+    document.getElementById('musicBtn').classList.toggle('active', settings.music);
+    document.getElementById('soundBtn').textContent = settings.sound ? 'ВКЛ' : 'ВЫКЛ';
+    document.getElementById('soundBtn').classList.toggle('active', settings.sound);
+    document.getElementById('graphics2D').classList.toggle('active', settings.graphics === '2d');
+    document.getElementById('graphics2_5D').classList.toggle('active', settings.graphics === '2_5d');
+    document.getElementById('graphics3D').classList.toggle('active', settings.graphics === '3d');
+    document.getElementById('bgBtn').textContent = settings.bgAnim ? 'ВКЛ' : 'ВЫКЛ';
+    document.getElementById('bgBtn').classList.toggle('active', settings.bgAnim);
+    document.getElementById('particlesBtn').textContent = settings.particles ? 'ВКЛ' : 'ВЫКЛ';
+    document.getElementById('particlesBtn').classList.toggle('active', settings.particles);
+}
+
+// === ПОБЕДА ===
+function onWin(who) {
+    win = true;
+    soundWin();
+    
+    const timeSpent = Math.floor((Date.now() - gameStartTime) / 1000);
+    document.getElementById('winMoves').textContent = moves;
+    document.getElementById('winTime').textContent = timeSpent;
+    document.getElementById('winCombo').textContent = maxCombo;
+    
+    statsData.games++;
+    statsData.totalMoves += moves;
+    if (who === 'Ты') statsData.wins++;
+    if (timeSpent < statsData.bestTime) statsData.bestTime = timeSpent;
+    localStorage.setItem('cubeStats', JSON.stringify(statsData));
+    
+    if (mode === 'bot') {
+        document.getElementById('winTitle').textContent = who === 'Ты' ? '🎉 ТЫ ПОБЕДИЛ!' : '😢 БОТ ПОБЕДИЛ';
+        if (who === 'Ты' && botDifficulty !== 'tutorial') {
+            unlockAchievement('bot_win');
+            if (botDifficulty === 'expert') unlockAchievement('expert_win');
+        }
+    } else {
+        document.getElementById('winTitle').textContent = '🎉 ПОБЕДА!';
+    }
+    
+    let stars = 1;
+    const minMoves = SIZE * SIZE;
+    if (moves <= minMoves * 0.7) stars = 3;
+    else if (moves <= minMoves * 1.2) stars = 2;
+    if (maxCombo >= 5) stars = 3;
+    
+    document.getElementById('stars').textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+    
+    if (who === 'Ты') {
+        unlockAchievement('first_win');
+        if (stars === 3) unlockAchievement('three_stars');
+        if (mode === 'levels' && currentLevel >= 5) unlockAchievement('level_5');
+        if (mode === 'levels' && currentLevel >= 10) unlockAchievement('level_10');
+        if (mode === 'timer') unlockAchievement('timer_win');
+        if (mode === 'endless') {
+            endlessCounter++;
+            if (endlessCounter >= 10) unlockAchievement('endless_10');
+        }
+        if (maxCombo >= 5) unlockAchievement('combo_master');
+    }
+    
+    if (mode !== 'bot' && who === 'Ты') saveRecord(stars, timeSpent, moves);
+    if (timerInterval) clearInterval(timerInterval);
+    
+    setTimeout(() => {
+        document.getElementById('gameScreen').classList.remove('active');
+        document.getElementById('winScreen').classList.add('active');
+    }, 500);
+}
+
+// === РЕЖИМЫ ===
+function startMode(m) {
+    soundButton();
+    if (m === 'tutorial') { showScreen('tutorialScreen'); return; }
+    if (m === 'botSetup') { showScreen('botSetupScreen'); return; }
+    
+    mode = m;
+    showScreen('gameScreen');
+    document.getElementById('timerBox').style.display = 'none';
+    document.getElementById('botBox').style.display = 'none';
+    document.getElementById('turnBox').style.display = 'none';
+    
+    win = false; moves = 0; botMoveCount = 0; isPlayerTurn = true;
+    comboCounter = 0; maxCombo = 0; hintIndex = 0;
+    document.getElementById('comboBox').classList.remove('show');
+    document.getElementById('moves').textContent = 0;
+    gameStartTime = Date.now();
+    
+    if (m === 'levels') {
+        currentLevel = 1;
+        document.getElementById('level').textContent = 1;
+        initGrid(5, true);
+    } else if (m === 'endless') {
+        document.getElementById('level').textContent = '∞';
+        initGrid(4, true);
+    } else if (m === 'timer') {
+        document.getElementById('level').textContent = '1';
+        document.getElementById('timerBox').style.display = 'block';
+        timer = 30;
+        document.getElementById('timer').textContent = timer;
+        initGrid(4, true);
+        startTimer();
+    }
+}
+
+function startBotGame(difficulty) {
+    soundButton();
+    botDifficulty = difficulty;
+    mode = 'bot';
+    showScreen('gameScreen');
+    document.getElementById('botBox').style.display = 'block';
+    document.getElementById('turnBox').style.display = 'block';
+    document.getElementById('botMoves').textContent = 0;
+    document.getElementById('turn').textContent = 'Твой';
+    
+    win = false; moves = 0; botMoveCount = 0; isPlayerTurn = true;
+    comboCounter = 0; maxCombo = 0; hintIndex = 0;
+    document.getElementById('comboBox').classList.remove('show');
+    document.getElementById('moves').textContent = 0;
+    gameStartTime = Date.now();
+    initGrid(4, true);
+    
+    const names = { tutorial: '📖 Обучение', easy: '🟢 Лёгкий', medium: '🟡 Средний', hard: '🟠 Сложный', expert: '🔴 Хард' };
+    notify('🤖 ' + names[difficulty]);
+    if (difficulty === 'tutorial') setTimeout(() => showBotHint(), 1000);
+}
+
+function startTimer() {
+    if (timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        timer--;
+        document.getElementById('timer').textContent = timer;
+        if (timer <= 0) {
+            clearInterval(timerInterval);
+            soundFail();
+            notify('⏱️ Время вышло!');
+            setTimeout(() => showMenu(), 1500);
+        }
+    }, 1000);
+}
+
+function restartCurrent() {
+    soundButton();
+    if (mode === 'bot') startBotGame(botDifficulty);
+    else startMode(mode);
+}
+
+function nextAction() {
+    soundButton();
+    if (mode === 'levels') {
+        currentLevel++;
+        if (currentLevel > 10) { notify('🏆 Все уровни пройдены!'); showMenu(); return; }
+        document.getElementById('level').textContent = currentLevel;
+        win = false; moves = 0; comboCounter = 0; maxCombo = 0;
+        document.getElementById('comboBox').classList.remove('show');
+        document.getElementById('moves').textContent = 0;
+        gameStartTime = Date.now();
+        const sizes = [3, 3, 4, 4, 4, 5, 5, 5, 5, 6];
+        SIZE = sizes[currentLevel - 1];
+        initGrid(SIZE, true);
+        if (currentLevel > 5) {
+            for (let i = 0; i < currentLevel; i++) {
+                const x = Math.floor(Math.random() * SIZE);
+                const y = Math.floor(Math.random() * SIZE);
+                grid[y][x] = 1;
+            }
+        }
+        showScreen('gameScreen');
+    } else restartCurrent();
+}
+
+function showScreen(id) {
+    document.querySelectorAll('#menuScreen, #gameScreen, #winScreen, #tutorialScreen, #botSetupScreen, #recordsScreen, #settingsScreen, #achievementsScreen, #statsScreen').forEach(el => {
+        el.classList.remove('active');
+    });
+    document.getElementById(id).classList.add('active');
+    if (id === 'achievementsScreen') renderAchievements();
+}
+
+function showMenu() {
+    soundButton();
+    if (timerInterval) clearInterval(timerInterval);
+    if (botTimeout) clearTimeout(botTimeout);
+    showScreen('menuScreen');
+}
+
+function showRecords() {
+    soundButton();
+    const records = JSON.parse(localStorage.getItem('cubeRecords') || '{}');
+    const list = document.getElementById('recordsList');
+    list.innerHTML = '';
+    const keys = Object.keys(records);
+    if (keys.length === 0) {
+        list.innerHTML = '<p style="text-align:center; color:#6a7a9a;">Пока нет рекордов. Сыграй!</p>';
+    } else {
+        for (const m of keys) {
+            const rec = records[m];
+            const div = document.createElement('div');
+            div.className = 'record-item';
+            div.innerHTML = `
+                <span class="mode-name">${m}</span>
+                <span class="record-stats">${'⭐'.repeat(rec.stars)} ${rec.time}с, ${rec.moves} ходов</span>
+            `;
+            list.appendChild(div);
+        }
+    }
+    showScreen('recordsScreen');
+}
+
+function showStats() {
+    soundButton();
+    const stats = JSON.parse(localStorage.getItem('cubeStats') || '{"games":0,"wins":0,"totalMoves":0,"bestTime":99999}');
+    const achievementsCount = Object.keys(achievements).length;
+    const achievementsTotal = Object.keys(ACHIEVEMENTS).length;
+    const content = document.getElementById('statsContent');
+    content.innerHTML = `
+        <div class="record-item"><span class="mode-name">🎮 Игр сыграно</span><span class="record-stats">${stats.games}</span></div>
+        <div class="record-item"><span class="mode-name">🏆 Побед</span><span class="record-stats">${stats.wins}</span></div>
+        <div class="record-item"><span class="mode-name">🎯 Всего ходов</span><span class="record-stats">${stats.totalMoves}</span></div>
+        <div class="record-item"><span class="mode-name">⏱️ Лучшее время</span><span class="record-stats">${stats.bestTime === 99999 ? '—' : stats.bestTime + 'с'}</span></div>
+        <div class="record-item"><span class="mode-name">🎖️ Достижения</span><span class="record-stats">${achievementsCount} / ${achievementsTotal}</span></div>
+        <div class="record-item"><span class="mode-name">🔥 Лучшее комбо</span><span class="record-stats">x${maxCombo}</span></div>
+    `;
+    showScreen('statsScreen');
+}
+
+function saveRecord(stars, time, moves) {
+    try {
+        const records = JSON.parse(localStorage.getItem('cubeRecords') || '{}');
+        const key = mode === 'levels' ? `Уровень ${currentLevel}` : mode;
+        if (!records[key] || records[key].stars < stars || 
+            (records[key].stars === stars && records[key].time > time)) {
+            records[key] = { stars, time, moves };
+            localStorage.setItem('cubeRecords', JSON.stringify(records));
+            notify('🏆 Новый рекорд!');
+        }
+    } catch (e) {}
+}
+
+// === КЛИК ===
+function getGridCoords(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mouseX = (clientX - rect.left) * scaleX;
+    const mouseY = (clientY - rect.top) * scaleY;
+    return {
+        x: Math.floor((mouseX - OFFSET_X) / TILE_SIZE),
+        y: Math.floor((mouseY - OFFSET_Y) / TILE_SIZE)
+    };
+}
+
+canvas.addEventListener('click', (e) => {
+    const { x, y } = getGridCoords(e.clientX, e.clientY);
+    if (x >= 0 && x < SIZE && y >= 0 && y < SIZE) {
+        if (mode === 'bot') playerMove(x, y);
+        else {
+            toggle(x, y);
+            moves++;
+            document.getElementById('moves').textContent = moves;
+            soundClick();
+            if (isAllOff()) onWin('Ты');
+        }
+    }
+});
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const { x, y } = getGridCoords(touch.clientX, touch.clientY);
+    if (x >= 0 && x < SIZE && y >= 0 && y < SIZE) {
+        if (mode === 'bot') playerMove(x, y);
+        else {
+            toggle(x, y);
+            moves++;
+            document.getElementById('moves').textContent = moves;
+            soundClick();
+            if (isAllOff()) onWin('Ты');
+        }
+    }
+}, { passive: false });
+
+canvas.addEventListener('mousemove', (e) => {
+    const { x, y } = getGridCoords(e.clientX, e.clientY);
+    hoveredCell = (x >= 0 && x < SIZE && y >= 0 && y < SIZE) ? { x, y } : { x: -1, y: -1 };
+});
+
+canvas.addEventListener('mouseleave', () => {
+    hoveredCell = { x: -1, y: -1 };
+});
+
+// === СТАРТ ===
+loadSettings();
+initBgCanvas();
+drawBg();
+initGrid(5, true);
+draw();
+
+document.addEventListener('click', () => {
+    if (!musicInterval && settings.music) startMusic();
+}, { once: true });
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') showMenu();
+    if (e.key === 'r' || e.key === 'R') restartCurrent();
+});
+</script>
+
+</body>
+</html>
